@@ -10,7 +10,7 @@ public:
 	int row() { return mat.rows; }
 	int col() { return mat.cols; }
 	cv::Vec3d& at(int ro, int co) { return mat.at<cv::Vec3d>(ro, co); }
-	void show(const std::string& name) { cv::imshow(name, mat); waitKey(10); }
+	void show(const std::string& name) { cv::imshow(name, mat); waitKey(1); }
 	void waitKey(int delay = 0) { cv::waitKey(delay); }
 	void save(const std::string& name) {
 		cv::Mat res;

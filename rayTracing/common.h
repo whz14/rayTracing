@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <opencv2/core/matx.hpp>
 
-const double EPS = 1e-6;
+const double EPS = 1e-4;
 const double INF = 1e10;
 const double PI = 2 * acos(0);
 const int TRACEDEPTH = 6;

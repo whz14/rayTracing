@@ -8,16 +8,22 @@
 //#include "raytracer.h"
 
 class Material {
-	double diff;
-	double refl;
+	double diff, spec;	// diffuse reflection and specular. sum = 1
+	double refl, refr;	// reflection and refraction. 
+	double refrInd;		// absolute refraction index (to vacuum)
 	Color color;
 public:
 	double getRefl() { return refl; }
 	double getDiff() { return diff; }
-	double getSpec() { return 1 - diff; }
+	double getSpec() { return spec; }
+	double getRefr() { return refr; }
+	double getRefrInd() { return refrInd; }
 	Color getColor() { return color; }
-	void setRefl(double re) { refl = re; }
 	void setDiff(double di) { diff = di; }
+	void setSpec(double sp) { spec = sp; }
+	void setRefl(double re) { refl = re; }
+	void setRefr(double re) { refr = re; }
+	void setRefrInd(double n) { refrInd = n; }
 	void setColor(const Color& co) { color = co; }
 	Material();
 };
@@ -29,7 +35,7 @@ public:
 		PLANE = 1, SPHERE
 	};
 	Primitive() : isLight(false), name("") {}
-	void setName(std::string nme) { name = nme; }
+	void setName(const std::string& nme) { name = nme; }
 	void setMaterial(Material* mater) { material = *mater; }
 	void setLight(bool lon) { isLight = lon; }
 	Material* getMaterial() { return &material; }
@@ -79,6 +85,7 @@ public:
 		}
 		delete[] pris;
 	}
+	void addPris(int type, const std::pair<vec3, double>& paramater, const std::string& name, double refl, double refr, double refrInd, double spec, double diff, Color col = Color(0.2, 0.2, 0.2));
 	void init();
 	//Primitive* operator[] (int index) { return pris[index]; }
 	Primitive* getPri(int index) { return pris[index]; }
