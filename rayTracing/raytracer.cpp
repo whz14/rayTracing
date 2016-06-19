@@ -9,6 +9,7 @@ void Engine::render() {
 	cout << "holy shit\n";
 	vec3 camPosi(0, 0, -5);
 	Primitive* lastPrim = NULL;
+	DWORD s_time = GetTickCount();
 	for(; presentY < screen.row() - 20; ++presentY) {
 		int start = GetTickCount();
 		for(; presentX < screen.col(); ++presentX) {	// for each pixel in the screen
@@ -42,9 +43,10 @@ void Engine::render() {
 		presentX = 0;
 		
 		//cout << presentY << "wocaonimalegebi\n";
-		if(presentY % 10 == 0)
-		screen.show("real time render");
+		/*if(presentY % 10 == 0)
+		screen.show("real time render");*/
 	}
+	cout << "ttl time" << (GetTickCount() - s_time)/1000 << endl;
 }
 
 void Engine::initRender() {
@@ -134,7 +136,11 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	double refr = pri->getMaterial()->getRefr();
 	if(refr > EPS && depth < TRACEDEPTH) {
 		double n2 = pri->getMaterial()->getRefrInd();
-		double n21 = n2 / refrIndex;
+		double n21;
+		if(hitOrNot == HIT)
+			n21 = n2 / refrIndex;
+		else
+			n21 = 1 / n2;
 		assert(hitOrNot != 0);
 		vec3 n = hitOrNot * pri->getNorm(poi);
 		double cosI = -ray.getDir().dotPro(n);
@@ -145,7 +151,7 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 			Color refrCol(0, 0, 0);
 			double dist;
 			assert(t.dotPro(n) <= 0);
-			rayTrace(Ray(poi + 10*EPS*t, t), refrCol, depth + 1, hitOrNot > 0 ? n2 : 1, dist);
+			rayTrace(Ray(poi + 10*EPS*t, t), refrCol, depth + 1, /*hitOrNot > 0 ?*/ 1 /*: n2*/, dist);
 			Color trans(1, 1, 1);
 #ifdef BEER_LAW
 			Color absorbance = -0.15 * dist * pri->getMaterial()->getColor();

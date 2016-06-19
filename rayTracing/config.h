@@ -1,5 +1,5 @@
 #pragma once
-#define BEER_LAW
+//#define BEER_LAW
 
 #define SUPERSAMPLE
 #ifdef SUPERSAMPLE
