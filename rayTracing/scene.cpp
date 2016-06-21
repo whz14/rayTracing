@@ -1,4 +1,5 @@
 #include <cmath>
+#include "config.h"
 #include "scene.h"
 #include "raytracer.h"
 using namespace std;
@@ -60,6 +61,16 @@ void Scene::init() {
 			addPris(Primitive::SPHERE, make_pair(vec3(-4.5f + x * 1.5f, -4.3f + y * 1.5f, 10), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
 		}
 	}
+	buildGrid();
+}
+
+void Scene::buildGrid() {
+	grids = new PriList*[GRIDNUM * GRIDNUM * GRIDNUM];
+	memset(grids, 0, sizeof(PriList*));
+	vec3 ldf(-14, -5, -6), rub(14, 8, 30);	// left-down-front and right-up-back
+	double dx = (ldf.x - rub.x) / GRIDNUM, dx_1 = 1 / dx;
+	double dy = (ldf.y - rub.y) / GRIDNUM, dy_1 = 1 / dy;
+	double dz = (ldf.y - rub.z) / GRIDNUM, dz_1 = 1 / dz;
 
 }
 

@@ -32,7 +32,7 @@ class Ray;
 class Primitive {
 public:
 	enum {
-		PLANE = 1, SPHERE
+		PLANE = 1, SPHERE, AABBBOX
 	};
 	Primitive() : isLight(false), name("") {}
 	void setName(const std::string& nme) { name = nme; }
@@ -72,9 +72,42 @@ public:
 	vec3 getCenter() { return center; }
 };
 
+class box : public Primitive {
+	aabb b;
+	double * grid;	// WTF???
+public:
+	box() : grid(NULL) {}
+	box(const aabb& b1) :b(b1), grid(NULL) {}
+	int getType() { return AABBBOX; }
+	vec3 getNorm(const vec3& position);
+	int intersect(Ray& ray, double& dist);
+	bool intersect(const aabb& b1) { return b.intersect(b1); }
+	bool contains(const vec3& p) { return b.contains(p); }
+	vec3& getPosi() { return b.getPosi(); }
+	vec3& getSize() { return b.getSize(); }
+
+};
+
+class PriList {
+	Primitive* pri;
+	PriList* next;
+public:
+	PriList(): pri(NULL), next(NULL) {}
+	~PriList() { if(next) delete next; }
+	
+	void setPri(Primitive*  pr) { pri = pr; }
+	Primitive* getPri() { return pri; }
+	void setNext(PriList* ne) { next = ne; }
+	PriList* getNext() { return next; }
+};
+
+
 class Scene {
-	int priNum;
+	int priNum, lightNum;
 	Primitive** pris;
+	Primitive** lights;
+	PriList** grids;
+	aabb extends;	// useless at present
 public:
 	Scene() :priNum(0), pris(NULL) {
 		//init();
@@ -87,9 +120,11 @@ public:
 	}
 	void addPris(int type, const std::pair<vec3, double>& paramater, const std::string& name, double refl, double refr, double refrInd, double spec, double diff, Color col = Color(0.2, 0.2, 0.2));
 	void init();
+	void buildGrid();
 	//Primitive* operator[] (int index) { return pris[index]; }
 	Primitive* getPri(int index) { return pris[index]; }
-	int getNum() { return priNum; }
+	int getPriNum() { return priNum; }
+	int getLightNum() { return lightNum; }
 };
 
 #endif

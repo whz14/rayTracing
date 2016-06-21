@@ -98,10 +98,39 @@ public:
 typedef vec3 Color;
 typedef unsigned int Piaxl;
 
-
-//std::ostream & operator<<(std::ostream & out, vec3 v) {
-//	// TODO: 在此处插入 return 语句
-//
-//}
+class aabb {
+	vec3 posi, size;
+public:
+	aabb(const vec3& pos, const vec3& siz) :posi(pos), size(siz) {}
+	aabb() {}
+	aabb(const aabb& b1) :posi(b1.getPosi()), size(b1.getSize()) {}
+	const vec3& getPosi() const {
+		return posi;
+	}
+	const vec3& getSize() const {
+		return size;
+	}
+	vec3& getPosi() {
+		return posi;
+	}
+	vec3& getSize() {
+		return size;
+	}
+	bool intersect(const aabb& box2) {
+		vec3 v1 = box2.getPosi(), v2 = box2.getSize() + box2.getPosi();
+		#define v3 posi
+		vec3 v4 = posi + size;
+		return v4.x >= v1.x && v2.x >= v3.x &&
+			v4.y >= v1.y && v2.y >= v3.y &&
+			v4.z >= v1.z && v2.z >= v3.z;
+		#undef v3
+	}
+	bool contains(const vec3& p) {
+		vec3 ru = posi + size;		// right-up
+		return p.x <= ru.x && p.x >= posi.x &&
+			p.y <= ru.y && p.y >= posi.y &&
+			p.z <= ru.z && p.z >= posi.z;
+	}
+};
 
 #endif

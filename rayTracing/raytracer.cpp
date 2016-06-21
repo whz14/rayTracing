@@ -68,7 +68,7 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	Primitive* pri = NULL;
 	vec3 poi;	// point of intersection
 	int hitOrNot = 2;
-	for(int i = 0; i < scene->getNum(); ++i) {
+	for(int i = 0; i < scene->getPriNum(); ++i) {
 		Primitive* pr = scene->getPri(i);
 		if(int res = pr->intersect(ray, dist)) {
 			pri = pr;
@@ -87,7 +87,7 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	poi = ray.getOri() + dist*ray.getDir();
 
 	// defuse and Phong spectecular
-	for(int i = 0; i < scene->getNum(); ++i) {
+	for(int i = 0; i < scene->getPriNum(); ++i) {
 		if(scene->getPri(i)->IsLight()) {
 		//  if it is light, calculate its defuse, shade and phong contribution to the pixel on the screen
 			Primitive* light = scene->getPri(i);
@@ -98,7 +98,7 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 				double ldist = l.length();
 				l /= ldist;
 				Ray ray1(poi + EPS*l, l);
-				for(int j = 0; j < scene->getNum(); ++j) {
+				for(int j = 0; j < scene->getPriNum(); ++j) {
 					Primitive* pr = scene->getPri(j);
 					if(!(pr->IsLight()) && pr->intersect(ray1, ldist)) {
 						shade = 0;
