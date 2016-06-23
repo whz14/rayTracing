@@ -46,7 +46,7 @@ void Engine::render() {
 		/*if(presentY % 10 == 0)
 		screen.show("real time render");*/
 	}
-	cout << "ttl time" << (GetTickCount() - s_time)/1000 << endl;
+	cout << "ttl time" << (GetTickCount() - s_time)*1.0/1000 << endl;
 }
 
 void Engine::initRender() {

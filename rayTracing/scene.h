@@ -44,7 +44,9 @@ public:
 	
 	virtual vec3 getNorm(const vec3& position) = 0;
 	virtual int intersect(Ray& ray, double& dist) = 0;
+	virtual bool intersect(const aabb& box) = 0;
 	virtual int getType() = 0;
+	virtual aabb getAABB() = 0;
 
 protected:
 	Material material;
@@ -58,7 +60,9 @@ public:
 	planePrim(const vec3& normVec, double dist) : pla(normVec, dist) {}
 	vec3 getNorm(const vec3& positon) { return pla.nvec; }
 	int intersect(Ray& ray, double& dist);
+	bool intersect(const aabb& box);
 	int getType() { return PLANE; }
+	aabb getAABB() { return aabb(vec3(-1000, -1000, -1000), vec3(3000, 3000, 3000)); }
 };
 
 class sphere : public Primitive {
@@ -66,10 +70,13 @@ class sphere : public Primitive {
 	double R, R_inv, R_2;	// radius, 1/radius and radius^2
 public:
 	sphere(const vec3& cen, double r1):center(cen), R(r1), R_inv(1/r1), R_2(r1*r1) {}
+	vec3 getCenter() { return center; }
+	
 	vec3 getNorm(const vec3& position) { vec3 res = (position - center); res.normlize(); return res; }
 	int intersect(Ray& ray, double& dist);
+	bool intersect(const aabb& box);
+	aabb getAABB() { return aabb(center - vec3(R, R, R), 2 * vec3(R, R, R)); }
 	int getType() { return SPHERE; }
-	vec3 getCenter() { return center; }
 };
 
 class box : public Primitive {
@@ -81,11 +88,11 @@ public:
 	int getType() { return AABBBOX; }
 	vec3 getNorm(const vec3& position);
 	int intersect(Ray& ray, double& dist);
+	aabb getAABB() { return b; }
 	bool intersect(const aabb& b1) { return b.intersect(b1); }
 	bool contains(const vec3& p) { return b.contains(p); }
 	vec3& getPosi() { return b.getPosi(); }
 	vec3& getSize() { return b.getSize(); }
-
 };
 
 class PriList {
