@@ -24,6 +24,7 @@ public:
 	void initRender();
 	void render();
 	int findNearest(Ray& ray, double& dist, Primitive*& prim);
+	double calcShade(Primitive* light, const vec3& poi, vec3& dir);
 	Primitive* renderRay(const vec3& scr, Color& col);
 	Primitive* rayTrace(Ray& ray, Color& res, int depth, double index, double& dist);
 private:

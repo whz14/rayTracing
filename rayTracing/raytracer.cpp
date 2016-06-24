@@ -46,8 +46,8 @@ void Engine::render() {
 		presentX = 0;
 		
 		//cout << presentY << "wocaonimalegebi\n";
-		if(presentY % 10 == 0)
-		screen.show("real time render");
+		/*if(presentY % 10 == 0)
+		screen.show("real time render");*/
 	}
 	cout << "ttl time" << (GetTickCount() - s_time)*1.0/1000 << endl;
 }
@@ -235,7 +235,29 @@ void Engine::initRender() {
 	//deltaX and deltaY;
 	DX = (SCRX2 - SCRX1) / screen.col();
 	DY = (SCRY2 - SCRY1) / screen.row();
+}
 
+double Engine::calcShade(Primitive * light, const vec3 & poi, vec3 & dir) {
+	double shade;
+	if(light->getType() == Primitive::SPHERE) {
+		shade = 1;
+		vec3 l = ((sphere*)light)->getCenter() - poi;
+		double ldist = l.length();
+		l /= ldist;
+		Ray ray1(poi + EPS*l, l);
+		Primitive* tmppri = NULL;
+		findNearest(ray1, ldist, tmppri);
+		if(light != tmppri) {	// blocked with sth else
+			//continue;
+			shade = 0;
+		}
+	}
+	else if(light->getType() == Primitive::AABBBOX) {
+		shade = 0;
+		box* b = (box*)light;
+
+	}
+	return shade;
 }
 
 Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIndex, double & dist) {
@@ -246,17 +268,6 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	int hitOrNot = 2;
 	if((hitOrNot = findNearest(ray, dist, pri)) == MISS)	// no intersection
 		return NULL;
-	// relplaced wit findNearest
-	//for(int i = 0; i < scene->getPriNum(); ++i) {
-	//	Primitive* pr = scene->getPri(i);
-	//	if(int res = pr->intersect(ray, dist)) {
-	//		pri = pr;
-	//		hitOrNot = res;
-	//	}
-	//}
-	//if(pri == NULL) {			// no intersection
-	//	return pri;
-	//}
 	if(pri->IsLight()) {		// intersected with light
 		resCol = pri->getMaterial()->getColor();
 		return pri;
@@ -269,20 +280,10 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	for(int i = 0; i < scene->getLightNum(); ++i) {
 	// for each light, calculate its defuse, shade and phong contribution to the pixel on the screen
 		Primitive* light = scene->getLight(i);
-		double shade = 1.0;
+		vec3 l;
+		double shade = calcShade(light, poi, l);
 		// shading
-		if(light->getType() == Primitive::SPHERE) {
-			vec3 l = ((sphere*)light)->getCenter() - poi;
-			double ldist = l.length();
-			l /= ldist;
-			Ray ray1(poi + EPS*l, l);
-			Primitive* tmppri = NULL;
-			findNearest(ray1, ldist, tmppri);
-			if(light != tmppri) {	// blocked with sth else
-				continue;
-				//shade = 0;
-			}
-		}
+		
 		
 		vec3 n = pri->getNorm(poi);						// normal of the primitive
 		vec3 v = ray.getDir();							// direction of the ray
@@ -291,14 +292,14 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 		vec3 r = l - 2 * l.dotPro(n) * n;				// reflection of the vec3 'l'
 					
 		// contribution of defuse reflection
-		if(shade && pri->getMaterial()->getDiff() > 0) {			
+		if(pri->getMaterial()->getDiff() > 0) {			
 			double dot = n.dotPro(l);
 			if(dot > EPS) {	// we can see the light's defuse
 				resCol += shade * (dot * pri->getMaterial()->getDiff()) * pri->getMaterial()->getColor() * light->getMaterial()->getColor();
 			}
 		}
 		// phong model. spec
-		if(shade > EPS && pri->getMaterial()->getSpec() > 0) {	
+		if(pri->getMaterial()->getSpec() > 0) {	
 			double dot = v.dotPro(r);
 			if(dot > 0) {
 				double spec = pow(dot, 20) * pri->getMaterial()->getSpec() * shade;
@@ -315,12 +316,11 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 			n21 = n2 / refrIndex;
 		else
 			n21 = 1 / n2;
-		assert(hitOrNot != 0);
+		//assert(hitOrNot != 0);
 		vec3 n = hitOrNot * pri->getNorm(poi);
 		double cosI = -ray.getDir().dotPro(n);
 		double cosT_2 = 1 - (1 - cosI*cosI) / (n21*n21);
 		if(cosT_2 > 0) {	// no total reflection
-			//vec3 t = ray.getDir() / n21 - (cosI / n21 + sqrt(cosT_2)) * n;// WTF?
 			vec3 t = ray.getDir() / n21 + (cosI / n21 - sqrt(cosT_2)) * n;
 			Color refrCol(0, 0, 0);
 			double dist;
@@ -331,7 +331,7 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 			Color absorbance = -0.15 * dist * pri->getMaterial()->getColor();
 			trans = Color(exp(absorbance.r), exp(absorbance.g), exp(absorbance.b));
 #endif
-			resCol += /*refr */refrCol * trans;
+			resCol += refrCol * trans;
 		}
 	}
 

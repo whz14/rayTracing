@@ -8,9 +8,10 @@
 //#include "raytracer.h"
 
 class Material {
-	double diff, spec;	// diffuse reflection and specular. sum = 1
+	double diff, spec;	// diffuse and specular. sum = 1
 	double refl, refr;	// reflection and refraction. 
 	double refrInd;		// absolute refraction index (to vacuum)
+	double dRefl;		// diffuse reflection
 	Color color;
 public:
 	double getRefl() { return refl; }
@@ -18,12 +19,14 @@ public:
 	double getSpec() { return spec; }
 	double getRefr() { return refr; }
 	double getRefrInd() { return refrInd; }
+	double getDRelf() { return dRefl; }
 	Color getColor() { return color; }
 	void setDiff(double di) { diff = di; }
 	void setSpec(double sp) { spec = sp; }
 	void setRefl(double re) { refl = re; }
 	void setRefr(double re) { refr = re; }
 	void setRefrInd(double n) { refrInd = n; }
+	void setDRefl(double dr) { dRefl = dr; }
 	void setColor(const Color& co) { color = co; }
 	Material();
 };

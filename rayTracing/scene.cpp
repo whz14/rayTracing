@@ -172,56 +172,6 @@ void Scene::buildGrid() {
 					}
 				}
 	}
-
-	//grids = new PriList*[GRIDNUM * GRIDNUM * GRIDNUM];
-	//memset(grids, 0, GRIDNUM * GRIDNUM * GRIDNUM * sizeof(PriList*));
-	//vec3 p1(-14, -5, -6), p2(14, 8, 30);
-	//// calculate cell width, height and depth
-	//double dx = (p2.x - p1.x) / GRIDNUM, dx_reci = 1.0f / dx;
-	//double dy = (p2.y - p1.y) / GRIDNUM, dy_reci = 1.0f / dy;
-	//double dz = (p2.z - p1.z) / GRIDNUM, dz_reci = 1.0f / dz;
-	//extends = aabb(p1, p2 - p1);
-	//lights = new Primitive*[MAXLIGHT];
-	//lightNum = 0;
-	//// store primitives in the grid cells
-	//for(int p = 0; p < priNum; p++) {
-	//	Primitive* pr = pris[p];
-	//	if(pris[p]->IsLight())
-	//		lights[lightNum++] = pris[p];
-	//	aabb bound = pris[p]->getAABB();
-	//	vec3 bv1 = bound.getPosi(), bv2 = bound.getPosi() + bound.getSize();
-	//	// find out which cells could contain the primitive (based on aabb)
-	//	//int x1 = (int)((bv1.x - p1.x) * dx_reci), x2 = (int)((bv2.x - p1.x) * dx_reci) + 1;
-	//	//x1 = (x1 < 0) ? 0 : x1;
-	//	//x2 = (x2 >(GRIDNUM - 1)) ? GRIDNUM - 1 : x2;
-	//	//int y1 = (int)((bv1.y - p1.y) * dy_reci), y2 = (int)((bv2.y - p1.y) * dy_reci) + 1;
-	//	//y1 = (y1 < 0)?0:y1, y2 = (y2 > (GRIDNUM - 1))?GRIDNUM - 1:y2;
-	//	//int z1 = (int)((bv1.z - p1.z) * dz_reci), z2 = (int)((bv2.z - p1.z) * dz_reci) + 1;
-	//	//z1 = (z1 < 0)?0:z1, z2 = (z2 > (GRIDNUM - 1))?GRIDNUM - 1:z2;
-	//	int x1 = (int)((bv1.x - p1.x) * dx_reci), x2 = (int)((bv2.x - p1.x) * dx_reci) + 1;
-	//	int y1 = (int)((bv1.y - p1.y) * dy_reci), y2 = (int)((bv2.y - p1.y) * dy_reci) + 1;
-	//	int z1 = (int)((bv1.z - p1.z) * dz_reci), z2 = (int)((bv2.z - p1.z) * dz_reci) + 1;
-	//	x1 = max(0, x1); x2 = min(x2, GRIDNUM - 1);
-	//	y1 = max(0, y1); y2 = min(y2, GRIDNUM - 1);
-	//	z1 = max(0, z1); z2 = min(z2, GRIDNUM - 1);
-	//	// loop over candidate cells
-	//	for(int x = x1; x <= x2; x++)
-	//		for(int y = y1; y <= y2; y++)
-	//			for(int z = z1; z <= z2; z++) {
-	//				// construct aabb for current cell
-	//				int idx = x + y * GRIDNUM + z * GRIDNUM * GRIDNUM;
-	//				vec3 pos(p1.x + x * dx, p1.y + y * dy, p1.z + z * dz);
-	//				aabb cell(pos, vec3(dx, dy, dz));
-	//				// do an accurate aabb / primitive intersection test
-	//				if(pris[p]->intersect(cell)) {
-	//					// object intersects cell; add to object list
-	//					PriList* l = new PriList();
-	//					l->setPri(pris[p]);
-	//					l->setNext(grids[idx]);
-	//					grids[idx] = l;
-	//				}
-	//			}
-	//}
 }
 
 void Scene::addPris
@@ -278,9 +228,20 @@ void Scene::init() {
 
 	// grid sphere
 	for(int x = 0; x < 8; ++x) {
-		for(int y = 0; y < 8; ++y) {
+		for(int y = 0; y < 7; ++y) {
 			addPris(Primitive::SPHERE, make_pair(vec3(-4.5f + x * 1.5f, -4.3f + y * 1.5f, 10), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
 		}
 	}
+	for(int x = 0; x < 8; ++x) {
+		for(int y = 0; y < 8; ++y) {
+			addPris(Primitive::SPHERE, make_pair(vec3(-4.5f + x * 1.5f, -4.3f, 10.0f - y * 1.5f), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
+		}
+	}
+	for(int x = 0; x < 16; ++x) {
+		for(int y = 0; y < 8; ++y) {
+			addPris(Primitive::SPHERE, make_pair(vec3(-8.5f + x * 1.5f, 4.3f, 10.0f - y), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
+		}
+	}
+
 	buildGrid();
 }
