@@ -113,8 +113,9 @@ class Scene {
 	int priNum, lightNum;
 	Primitive** pris;
 	Primitive** lights;
+	//PriList* (fuck[100]);
 	PriList** grids;
-	aabb extends;	// useless at present
+	aabb extends;
 public:
 	Scene() :priNum(0), pris(NULL) {
 		//init();
@@ -130,8 +131,11 @@ public:
 	void buildGrid();
 	//Primitive* operator[] (int index) { return pris[index]; }
 	Primitive* getPri(int index) { return pris[index]; }
+	Primitive* getLight(int index) { return lights[index]; }
 	int getPriNum() { return priNum; }
 	int getLightNum() { return lightNum; }
+	PriList** getGrids() { return grids; }
+	const aabb& getExtends() { return extends; }
 };
 
 #endif

@@ -40,6 +40,7 @@ public:
 	friend vec3 operator * (const vec3& v, const vec3& v1) { return vec3(x1*v1.x, y1*v1.y, z1*v1.z); }	// behaviour same as .* in matlab
 	friend vec3 operator * (double d, const vec3& v) { return vec3(x1 * d, y1 * d, z1 * d); }
 	friend vec3 operator / (const vec3& v, double d) { return vec3(x1 / d, y1 / d, z1 / d); }
+	friend vec3 operator / (double d, const vec3& v) { return vec3(d / x1, d / y1, d / z1); }
 	friend std::ostream& operator << (std::ostream& out, vec3 v) {
 		out << (int)(255*v.x) << " " << (int)(255 * v.y) << " " << (int)(255 * v.z);
 		return out;

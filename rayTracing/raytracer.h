@@ -21,11 +21,14 @@ public:
 		scene = new Scene;
 		initRender();
 	}
-	void render();
 	void initRender();
+	void render();
+	int findNearest(Ray& ray, double& dist, Primitive*& prim);
+	Primitive* renderRay(const vec3& scr, Color& col);
 	Primitive* rayTrace(Ray& ray, Color& res, int depth, double index, double& dist);
 private:
 	double SCRX1, SCRX2, SCRY1, SCRY2, DX, DY;
+	vec3 SR, CW;
 	int presentX, presentY;
 	// Primitive** lastRow???
 	Scene* scene;
