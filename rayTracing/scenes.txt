@@ -43,3 +43,30 @@
 			addPris(Primitive::SPHERE, make_pair(vec3(-8.5f + x * 1.5f, 4.3f, 10.0f - y), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
 		}
 	}
+
+软硬阴影用的，三个球一个面光源
+	pris = new Primitive*[500];
+	// ground plane
+	addPris(Primitive::PLANE, make_pair(vec3(0, 1, 0), 4.4), "ground plane", 
+		0, 0, -1, -1, 1, Color(0.4, 0.3, 0.3));
+	// big sphere
+	addPris(Primitive::SPHERE, make_pair(vec3(0, -0.8f, 7), 2), "big sphere", 
+		0.2, 0.8, 1.3, -1, -1, Color(0.7f, 0.7f, 0.7f), 0.3);
+	// 2 small spheres
+	addPris(Primitive::SPHERE, make_pair(vec3(-5, -0.8, 7), 2), "small sphere",
+		0.5, 0, 1.3, -1, 0.1, Color(0.7, 0.7, 1), 0.6);
+	addPris(Primitive::SPHERE, make_pair(vec3(5, -0.8, 7), 2), "small sphere",
+		0.5, 0.0, 1.3, -1.0, 0.1, Color(0.7, 0.7, 1));
+
+	// plane light source 1
+	addPris(Primitive::AABBBOX, make_pair(vec3(-1, 5, 4), vec3(2, 0.1, 2)), "plane light",
+		-1, -1, -1, -1, -1, Color(1, 1, 1));
+	pris[priNum - 1]->setLight(true);
+
+	// back plane
+	addPris(Primitive::PLANE, make_pair(vec3(0, 0, -1), 12), "back_plane", 
+		0, 0, -1, 0, 1, Color(0.4, 0.3, 0.3));
+	// celling plane
+	addPris(Primitive::PLANE, make_pair(vec3(0, -1, 0), 5.2), "celling_plane", 
+		0, 0, -1, 0, 1, Color(0.4f, 0.3f, 0.3f));
+	

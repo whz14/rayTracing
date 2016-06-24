@@ -6,7 +6,7 @@ using namespace std;
 
 Material::Material() :
 	color(Color(0.2, 0.2, 0.2)),
-	diff(0.2), spec(0.8), refl(0), refrInd(1.5), refr(0) {
+	diff(0.2), spec(0.8), refl(0), refrInd(1.5), refr(0), dRefl(0) {
 }
 
 int planePrim::intersect(Ray & ray, double & dist) {
@@ -134,6 +134,33 @@ int box::intersect(Ray & ray, double & d0) {
 	//return 0;
 }
 
+void box::setLight(bool lon) {
+	isLight = lon;
+	if(isLight) {
+		//grid = new double[32];
+		grid[0] = 1, grid[1] = 2;
+		grid[2] = 3, grid[3] = 3;
+		grid[4] = 2, grid[5] = 0;
+		grid[6] = 0, grid[7] = 1;
+		grid[8] = 2, grid[9] = 3;
+		grid[10] = 0, grid[11] = 3;
+		grid[12] = 0, grid[13] = 0;
+		grid[14] = 2, grid[15] = 2;
+		grid[16] = 3, grid[17] = 1;
+		grid[18] = 1, grid[19] = 3;
+		grid[20] = 1, grid[21] = 0;
+		grid[22] = 3, grid[23] = 2;
+		grid[24] = 2, grid[25] = 1;
+		grid[26] = 3, grid[27] = 0;
+		grid[28] = 1, grid[29] = 1;
+		grid[30] = 0, grid[31] = 2;
+		for(int i = 0; i < 16; i++) {
+			grid[i * 2] = grid[i * 2] * b.getSize().x / 4 + b.getPosi().x;
+			grid[i * 2 + 1] = grid[i * 2 + 1] * b.getSize().z / 4 + b.getPosi().z;
+		}
+	}
+}
+
 
 void Scene::buildGrid() {
 	grids = new PriList*[GRIDNUM * GRIDNUM * GRIDNUM];
@@ -175,7 +202,34 @@ void Scene::buildGrid() {
 }
 
 void Scene::addPris
-(int type, const std::pair<vec3, double>& paramater, const std::string& name, double refl, double refr, double refrInd, double spec, double diff, Color col) {
+(int type, const std::pair<vec3, vec3>& paramater, const std::string & name, double refl, double refr, double refrInd, double spec, double diff, Color col, double diffRefl) {
+	if(type == Primitive::AABBBOX) {
+		pris[priNum] = new box(paramater.first, paramater.second);
+	}
+	else {
+		cout << type << endl;
+		system("pause");
+		exit(-1);
+	}
+	pris[priNum]->setName(name);
+	if(refl >= 0)
+		pris[priNum]->getMaterial()->setRefl(refl);
+	if(refr >= 0)
+		pris[priNum]->getMaterial()->setRefr(refr);
+	if(refrInd >= 0)
+		pris[priNum]->getMaterial()->setRefrInd(refrInd);
+	if(spec >= 0)
+		pris[priNum]->getMaterial()->setSpec(spec);
+	if(diff >= 0)
+		pris[priNum]->getMaterial()->setDiff(diff);
+	if(diffRefl >= 0)
+		pris[priNum]->getMaterial()->setDRefl(diffRefl);
+	pris[priNum]->getMaterial()->setColor(col);
+	priNum++;
+}
+
+void Scene::addPris
+(int type, const std::pair<vec3, double>& paramater, const std::string& name, double refl, double refr, double refrInd, double spec, double diff, Color col, double diffRefl) {
 	if(type == Primitive::SPHERE) {
 		pris[priNum] = new sphere(paramater.first, paramater.second);
 	}
@@ -193,55 +247,96 @@ void Scene::addPris
 		pris[priNum]->getMaterial()->setSpec(spec);
 	if(diff >= 0)
 		pris[priNum]->getMaterial()->setDiff(diff);
-
+	if(diffRefl >= 0)
+		pris[priNum]->getMaterial()->setDRefl(diffRefl);
 	pris[priNum]->getMaterial()->setColor(col);
 	priNum++;
 }
 
 void Scene::init() {
+	//pris = new Primitive*[500];
+	//// ground plane
+	//addPris(Primitive::PLANE, make_pair(vec3(0, 1, 0), 4.4), "ground plane", 
+	//	0, 0, -1, -1, 1, Color(0.4, 0.3, 0.3));
+	//// big sphere
+	//addPris(Primitive::SPHERE, make_pair(vec3(0, -0.8f, 7), 2), "big sphere", 
+	//	0.2, 0.8, 1.3, -1, -1, Color(0.7f, 0.7f, 0.7f), 0.3);
+	//// 2 small spheres
+	//addPris(Primitive::SPHERE, make_pair(vec3(-5, -0.8, 7), 2), "small sphere",
+	//	0.5, 0, 1.3, -1, 0.1, Color(0.7, 0.7, 1), 0.6);
+	//addPris(Primitive::SPHERE, make_pair(vec3(5, -0.8, 7), 2), "small sphere",
+	//	0.5, 0.0, 1.3, -1.0, 0.1, Color(0.7, 0.7, 1));
+
+	//// plane light source 1
+	//addPris(Primitive::AABBBOX, make_pair(vec3(-1, 5, 4), vec3(2, 0.1, 2)), "plane light",
+	//	-1, -1, -1, -1, -1, Color(1, 1, 1));
+	//pris[priNum - 1]->setLight(true);
+
+	//// back plane
+	//addPris(Primitive::PLANE, make_pair(vec3(0, 0, -1), 12), "back_plane", 
+	//	0, 0, -1, 0, 1, Color(0.4, 0.3, 0.3));
+	//// celling plane
+	//addPris(Primitive::PLANE, make_pair(vec3(0, -1, 0), 5.2), "celling_plane", 
+	//	0, 0, -1, 0, 1, Color(0.4f, 0.3f, 0.3f));
 	pris = new Primitive*[500];
 	// ground plane
-	addPris(Primitive::PLANE, make_pair(vec3(0, 1, 0), 4.4), "ground plane", 0, 0, -1, -1, 1, Color(0.4, 0.3, 0.3));
-
+	pris[0] = new planePrim(vec3(0, 1, 0), 4.4f);
+	pris[0]->setName("plane");
+	pris[0]->getMaterial()->setRefl(0.0f);
+	pris[0]->getMaterial()->setRefr(0.0f);
+	pris[0]->getMaterial()->setDiff(1.0f);
+	pris[0]->getMaterial()->setColor(Color(0.4f, 0.3f, 0.3f));
 	// big sphere
-	addPris(Primitive::SPHERE, make_pair(vec3(2, 0.8f, 3), 2.5f), "big sphere", 0.2, 0.8, 1.3, -1, -1, Color(0.7f, 0.7f, 0.7f));
-
+	pris[1] = new sphere(vec3(0, -0.8f, 7), 2);
+	pris[1]->setName("big sphere");
+	pris[1]->getMaterial()->setRefl(0.2f);
+	pris[1]->getMaterial()->setRefr(0.8f);
+	pris[1]->getMaterial()->setRefrInd(1.3f);
+	pris[1]->getMaterial()->setColor(Color(0.7f, 0.7f, 1.0f));
+	pris[1]->getMaterial()->setDRefl(0.3f);
 	// small sphere
-	addPris(Primitive::SPHERE, make_pair(vec3(-5.5f, -0.5, 7), 2), "small sphere", 0.5, 0, 1.3, -1, 0.1, Color(0.7, 0.7, 1));
-
+	pris[2] = new sphere(vec3(-5, -0.8f, 7), 2);
+	pris[2]->setName("small sphere");
+	pris[2]->getMaterial()->setRefl(0.5f);
+	pris[2]->getMaterial()->setRefr(0.0f);
+	pris[2]->getMaterial()->setRefrInd(1.3f);
+	pris[2]->getMaterial()->setDiff(0.1f);
+	pris[2]->getMaterial()->setColor(Color(0.7f, 0.7f, 1.0f));
+	pris[2]->getMaterial()->setDRefl(0.6f);
+	// third sphere
+	pris[3] = new sphere(vec3(5, -0.8f, 7), 2);
+	pris[3]->setName("small sphere");
+	pris[3]->getMaterial()->setRefl(0.5f);
+	pris[3]->getMaterial()->setRefr(0.0f);
+	pris[3]->getMaterial()->setRefrInd(1.3f);
+	pris[3]->getMaterial()->setDiff(0.1f);
+	pris[3]->getMaterial()->setColor(Color(0.7f, 0.7f, 1.0f));
+#if 1
+	// area light
+	pris[4] = new box(aabb(vec3(-1, 5, 4), vec3(2, 0.1f, 2)));
+	pris[4]->setLight(true);
+	pris[4]->getMaterial()->setColor(Color(1, 1, 1));
+#else
 	// light source 1
-	addPris(Primitive::SPHERE, make_pair(vec3(0, 5, 5), 0.1f), "light 1", -1, -1, -1, -1, -1, Color(0.4, 0.4, 0.4));
-	pris[priNum - 1]->setLight(true);
-
-	// light source 2
-	addPris(Primitive::SPHERE, make_pair(vec3(-3, 5, 1), 0.1f), "light 2", -1, -1, -1, -1, -1, Color(0.6, 0.6, 0.8));
-	pris[priNum - 1]->setLight(true);
-
-	// extra sphere
-	addPris(Primitive::SPHERE, make_pair(vec3(-1.5, -3.8, 1), 1.5), "extra sphere", 0, 0.8, -1, -1, -1, Color(1, 0.4, 0.4));
-
+	pris[4] = new Sphere(vec3(0, 5, 5), 0.1f);
+	pris[4]->Light(true);
+	pris[4]->getMaterial()->SetColor(Color(1, 1, 1));
+#endif
 	// back plane
-	addPris(Primitive::PLANE, make_pair(vec3(0.4, 0, -1), 12), "back_plane", 0, 0, -1, 0, 0.6, Color(0.5, 0.3, 0.5));
-
-	// celling plane
-	addPris(Primitive::PLANE, make_pair(vec3(0, -1, 0), 7.4f), "celling_plane", 0, 0, -1, 0, 0.5, Color(0.4f, 0.7f, 0.7f));
-
-	// grid sphere
-	for(int x = 0; x < 8; ++x) {
-		for(int y = 0; y < 7; ++y) {
-			addPris(Primitive::SPHERE, make_pair(vec3(-4.5f + x * 1.5f, -4.3f + y * 1.5f, 10), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
-		}
-	}
-	for(int x = 0; x < 8; ++x) {
-		for(int y = 0; y < 8; ++y) {
-			addPris(Primitive::SPHERE, make_pair(vec3(-4.5f + x * 1.5f, -4.3f, 10.0f - y * 1.5f), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
-		}
-	}
-	for(int x = 0; x < 16; ++x) {
-		for(int y = 0; y < 8; ++y) {
-			addPris(Primitive::SPHERE, make_pair(vec3(-8.5f + x * 1.5f, 4.3f, 10.0f - y), 0.3f), "grid_sphere", 0, 0, -1, 0.6, 0.6, Color(0.3f, 1.0f, 0.4f));
-		}
-	}
+	pris[5] = new planePrim(vec3(0, 0, -1), 12.4f);
+	pris[5]->setName("backplane");
+	pris[5]->getMaterial()->setRefl(0.0f);
+	pris[5]->getMaterial()->setRefr(0.0f);
+	pris[5]->getMaterial()->setDiff(1.0f);
+	pris[5]->getMaterial()->setColor(Color(0.4f, 0.3f, 0.3f));
+	// ceiling
+	pris[6] = new planePrim(vec3(0, -1, 0), 5.2f);
+	pris[6]->setName("ceiling");
+	pris[6]->getMaterial()->setRefl(0.0f);
+	pris[6]->getMaterial()->setRefr(0.0f);
+	pris[6]->getMaterial()->setDiff(1.0f);
+	pris[6]->getMaterial()->setColor(Color(0.4f, 0.3f, 0.3f));
+	priNum = 6;
 
 	buildGrid();
 }

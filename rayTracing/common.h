@@ -12,7 +12,7 @@
 const double EPS = 1e-4;
 const double INF = 1e10;
 const double PI = 2 * acos(0);
-const int TRACEDEPTH = 6;
+const int TRACEDEPTH = 4;
 const int MAXLIGHT = 10;
 inline double rand1(double range) { return rand() * 1.0 / RAND_MAX * range; }
 

@@ -14,9 +14,9 @@ void Engine::render() {
 		//int start = GetTickCount();
 		//cout << presentY << endl;
 		for(; presentX < screen.col(); ++presentX) {	// for each pixel in the screen
-			/*if(presentX == 270 && presentY == 540) {
-				cout << "fuck\n";
-				for(int fuck = 0; fuck < 1e9; ++fuck);
+			/*if(presentX == 400 && presentY == 310) {
+				for(int fuck = 0; fuck < 30000; ++fuck)
+					cout << "fuck\n";
 			}*/
 			Color acc(0, 0, 0);
 			vec3 scrPoint(SCRX1 + DX * (presentX), SCRY1 + DY * (presentY), 0);
@@ -28,16 +28,16 @@ void Engine::render() {
 			if(lastPrim != thisPrim) {
 				lastPrim = thisPrim;
 				acc = Color(0, 0, 0);
-				for(int i = 0; i < SAMPLENUM; ++i) {
-					for(int j = 0; j < SAMPLENUM; ++j) {
-						vec3 scrPoint1(SCRX1 + DX * (presentX + i *DX / SAMPLENUM), SCRY1 + DY * (presentY + j*DY / SAMPLENUM), 0);
+				for(int i = 0; i < SUPERSAMPLENUM; ++i) {
+					for(int j = 0; j < SUPERSAMPLENUM; ++j) {
+						vec3 scrPoint1(SCRX1 + DX * (presentX + i *DX / SUPERSAMPLENUM), SCRY1 + DY * (presentY + j*DY / SUPERSAMPLENUM), 0);
 						//Ray ray(camPosi, (scrPoint - camPosi).normlize());
 						double dist = INF;
 						renderRay(scrPoint1, acc);
 						//rayTrace(ray, acc, 1, 1, dist);	// depth is 1, refraction index is 1, i.e. air
 					}
 				}
-				acc /= SAMPLENUM*SAMPLENUM;
+				acc /= SUPERSAMPLENUM*SUPERSAMPLENUM;
 			}
 			//cout << acc << endl;
 			assign(screen.at(presentY, presentX), acc);
@@ -46,8 +46,10 @@ void Engine::render() {
 		presentX = 0;
 		
 		//cout << presentY << "wocaonimalegebi\n";
-		/*if(presentY % 10 == 0)
-		screen.show("real time render");*/
+#ifdef REALTIMERENDER
+		if(presentY % 10 == 0)
+		screen.show("real time render");
+#endif
 	}
 	cout << "ttl time" << (GetTickCount() - s_time)*1.0/1000 << endl;
 }
@@ -140,19 +142,22 @@ int Engine::findNearest(Ray & ray, double & dist, Primitive *& prim) {
 			}
 			else {
 				Z = Z + stepZ;
-				if(Z == outZ) return MISS;
+				if(Z == outZ)
+					return MISS;
 				tmax.z += tdelta.z;
 			}
 		}
 		else {
 			if(tmax.y < tmax.z) {
 				Y = Y + stepY;
-				if(Y == outY) return MISS;
+				if(Y == outY)
+					return MISS;
 				tmax.y += tdelta.y;
 			}
 			else {
 				Z = Z + stepZ;
-				if(Z == outZ) return MISS;
+				if(Z == outZ) 
+					return MISS;
 				tmax.z += tdelta.z;
 			}
 		}
@@ -254,8 +259,21 @@ double Engine::calcShade(Primitive * light, const vec3 & poi, vec3 & dir) {
 	}
 	else if(light->getType() == Primitive::AABBBOX) {
 		shade = 0;
-		box* b = (box*)light;
-
+		box* blight = (box*)light;
+		dir = (blight->getPosi() + 0.5 * blight->getSize() - poi).normlize();
+		double dx = blight->getSize().x * 0.25, dz = blight->getSize().z * 0.25;
+		for(int i = 0; i < SAMPLENUM; ++i) {
+			vec3 d1(blight->gridX(i % 16) + dx * rand1(1) - poi.x, blight->getPosi().y - poi.y, blight->gridZ(i % 16) + dz * rand1(1) - poi.z);
+			Primitive* tmppri = NULL;
+			double len = d1.length();
+			d1 /= len;
+			if(findNearest(Ray(poi + EPS* d1, d1), len, tmppri)) {
+				if(tmppri == light) {
+					//cout << "i is " << i << endl;
+					shade += SMPNUM_1;
+				}
+			}
+		}
 	}
 	return shade;
 }
@@ -264,7 +282,6 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	if(depth > TRACEDEPTH) return NULL;
 	dist = INF;
 	Primitive* pri = NULL;
-	vec3 poi;	// point of intersection
 	int hitOrNot = 2;
 	if((hitOrNot = findNearest(ray, dist, pri)) == MISS)	// no intersection
 		return NULL;
@@ -274,23 +291,22 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 	}
 	
 	//else: intersected with sth else
-	poi = ray.getOri() + dist*ray.getDir();
+	vec3 poi = ray.getOri() + dist*ray.getDir();;	// point of intersection
 
 	// defuse and Phong spectecular
 	for(int i = 0; i < scene->getLightNum(); ++i) {
 	// for each light, calculate its defuse, shade and phong contribution to the pixel on the screen
 		Primitive* light = scene->getLight(i);
-		vec3 l;
+		vec3 l;								// pointing to the light
 		double shade = calcShade(light, poi, l);
+		vec3 n = pri->getNorm(poi);			// normal of the primitive
+		vec3 v = ray.getDir();				// direction of the ray
+		vec3 r = l - 2 * l.dotPro(n) * n;	// reflection of the vec3 'l'
 		// shading
-		
-		
-		vec3 n = pri->getNorm(poi);						// normal of the primitive
-		vec3 v = ray.getDir();							// direction of the ray
-		vec3 l = ((sphere*)light)->getCenter() - poi;	// pointing to the light
-		l.normlize();
-		vec3 r = l - 2 * l.dotPro(n) * n;				// reflection of the vec3 'l'
-					
+		if(shade <= EPS) {
+			continue;
+		}
+
 		// contribution of defuse reflection
 		if(pri->getMaterial()->getDiff() > 0) {			
 			double dot = n.dotPro(l);
@@ -307,6 +323,40 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 			}
 		}
 	}
+
+	// reflection
+	double refl = pri->getMaterial()->getRefl();
+	if(refl > EPS && depth < TRACEDEPTH) {
+		double drefl = pri->getMaterial()->getDRelf();
+		if(drefl > 0 && depth < 2) {
+			vec3 n = pri->getNorm(poi);
+			vec3 r = ray.getDir() - 2 * n.dotPro(ray.getDir()) * n;
+			vec3 r1(-r.z, r.y, r.x);
+			vec3 r2 = r.crossPro(r1);
+			refl *= SMPNUM_1;
+			for(int i = 0; i < SAMPLENUM; ++i) {
+				double dx, dy;
+				do {
+					dx = rand1(1), dy = rand1(1);
+				} while(dx*dx + dy*dy > 1);
+				dx *= drefl, dy *= drefl;
+				vec3 dir1 = (r + dx * r1 + dy * r2).normlize();
+				double dist1;
+				Color col1;
+				rayTrace(Ray(poi + EPS * dir1, dir1), col1, depth + 1, refrIndex, dist1);
+				resCol += refl * col1 * pri->getMaterial()->getColor();
+			}
+		}
+		else {
+			vec3 v = ray.getDir(), n = pri->getNorm(poi);
+			vec3 r = v - 2 * v.dotPro(n) * n;
+			Color refCol(0, 0, 0);
+			double dis;
+			rayTrace(Ray(poi + EPS*r, r), refCol, depth + 1, refrIndex, dis);
+			resCol += refl * refCol * pri->getMaterial()->getColor();
+		}
+	}
+
 	// refraction
 	double refr = pri->getMaterial()->getRefr();
 	if(refr > EPS && depth < TRACEDEPTH) {
@@ -335,15 +385,5 @@ Primitive * Engine::rayTrace(Ray & ray, Color & resCol, int depth, double refrIn
 		}
 	}
 
-	// reflection
-	double refl = pri->getMaterial()->getRefl();
-	if(refl > EPS && depth < TRACEDEPTH) {
-		vec3 v = ray.getDir(), n = pri->getNorm(poi);
-		vec3 r = v - 2 * v.dotPro(n) * n;
-		Color refCol(0, 0, 0);
-		double dis;
-		rayTrace(Ray(poi + EPS*r, r), refCol, depth + 1, refrIndex, dis);
-		resCol += refl * refCol * pri->getMaterial()->getColor();
-	}
 	return pri;
 }

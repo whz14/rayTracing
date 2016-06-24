@@ -40,7 +40,6 @@ public:
 	Primitive() : isLight(false), name("") {}
 	void setName(const std::string& nme) { name = nme; }
 	void setMaterial(Material* mater) { material = *mater; }
-	void setLight(bool lon) { isLight = lon; }
 	Material* getMaterial() { return &material; }
 	std::string getName() { return name; }
 	bool IsLight() { return isLight; }
@@ -50,6 +49,7 @@ public:
 	virtual bool intersect(const aabb& box) = 0;
 	virtual int getType() = 0;
 	virtual aabb getAABB() = 0;
+	virtual void setLight(bool lon) { isLight = lon; }
 
 protected:
 	Material material;
@@ -84,16 +84,21 @@ public:
 
 class box : public Primitive {
 	aabb b;
-	double * grid;	// WTF???
+	double grid[32];	// WTF???
 public:
-	box() : grid(NULL) {}
-	box(const aabb& b1) :b(b1), grid(NULL) {}
+	box() { memset(grid, 0, sizeof(grid)); }
+	box(const aabb& b1) :b(b1) { memset(grid, 0, sizeof(grid)); }
+	box(const vec3& posi, const vec3& size) : b(posi, size) {}
 	int getType() { return AABBBOX; }
 	vec3 getNorm(const vec3& position);
 	int intersect(Ray& ray, double& dist);
-	aabb getAABB() { return b; }
 	bool intersect(const aabb& b1) { return b.intersect(b1); }
+	aabb getAABB() { return b; }
+
+	void setLight(bool lon);
 	bool contains(const vec3& p) { return b.contains(p); }
+	double gridX(int index) { return grid[index << 1]; }
+	double gridZ(int index) { return grid[(index << 1) + 1]; }
 	vec3& getPosi() { return b.getPosi(); }
 	vec3& getSize() { return b.getSize(); }
 };
@@ -129,7 +134,12 @@ public:
 		}
 		delete[] pris;
 	}
-	void addPris(int type, const std::pair<vec3, double>& paramater, const std::string& name, double refl, double refr, double refrInd, double spec, double diff, Color col = Color(0.2, 0.2, 0.2));
+	void addPris(int type, const std::pair<vec3, vec3>& paramater, const std::string& name,
+		double refl, double refr, double refrInd, double spec, double diff,
+		Color col = Color(0.2, 0.2, 0.2), double diffRefl = -1);
+	void addPris(int type, const std::pair<vec3, double>& paramater, const std::string& name, 
+		double refl, double refr, double refrInd, double spec, double diff, 
+		Color col = Color(0.2, 0.2, 0.2), double diffRefl = -1);
 	void init();
 	void buildGrid();
 	//Primitive* operator[] (int index) { return pris[index]; }
